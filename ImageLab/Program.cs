@@ -7,15 +7,24 @@ using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
 
-var builder = Host.CreateApplicationBuilder();
-ConfigureDatabase(builder.Services);
+#if DEBUG
+var botToken = GetEnvironmentVariable("IMAGELAB_BOT_TOKEN_DEBUG");
 
-var botToken = GetEnvironmentVariable("DISCORD_BOT_TOKEN");
 if (string.IsNullOrEmpty(botToken))
 {
-    throw new ConfigurationException("DISCORD_BOT_TOKEN environment variable is not set");
+    throw new ConfigurationException("IMAGELAB_BOT_TOKEN_DEBUG environment variable is not set");
 }
+#else
+var botToken = GetEnvironmentVariable("IMAGELAB_BOT_TOKEN");
 
+if (string.IsNullOrEmpty(botToken))
+{
+    throw new ConfigurationException("IMAGELAB_BOT_TOKEN environment variable is not set");
+}
+#endif
+
+var builder = Host.CreateApplicationBuilder();
+ConfigureDatabase(builder.Services);
 ConfigureDiscord(builder, botToken);
 
 var host = builder.Build();
