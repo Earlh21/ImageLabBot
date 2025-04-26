@@ -1,8 +1,11 @@
-﻿using ImageLab;
+﻿using Ideogram;
+using ImageLab;
 using ImageLab.Data;
+using ImageLab.Services.OpenAI;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
@@ -23,9 +26,27 @@ if (string.IsNullOrEmpty(botToken))
 }
 #endif
 
+var openaiKey = GetEnvironmentVariable("IMAGELAB_OPENAI_KEY");
+
+if (string.IsNullOrEmpty(openaiKey))
+{
+    throw new ConfigurationException("IMAGELAB_OPENAI_KEY environment variable is not set");
+}
+
+var ideogramKey = GetEnvironmentVariable("IMAGELAB_IDEOGRAM_KEY");
+
+if (string.IsNullOrEmpty(ideogramKey))
+{
+    throw new ConfigurationException("IMAGELAB_IDEOGRAM_KEY environment variable is not set");
+}
+
 var builder = Host.CreateApplicationBuilder();
 ConfigureDatabase(builder.Services);
 ConfigureDiscord(builder, botToken);
+ConfigureOpenAI(builder.Services, openaiKey);
+ConfigureIdeogram(builder.Services, ideogramKey);
+ConfigureLogging(builder.Services);
+ConfigureHttpClient(builder.Services);
 
 var host = builder.Build();
 
@@ -34,6 +55,29 @@ ConfigureDiscordCommands(host);
 await host.RunAsync();
 
 return;
+
+void ConfigureHttpClient(IServiceCollection services)
+{
+    services.AddSingleton(new HttpClient());
+}
+
+void ConfigureLogging(IServiceCollection services)
+{
+    services.AddLogging(builder => builder.AddConsole());
+}
+
+void ConfigureOpenAI(IServiceCollection services, string key)
+{
+    services.AddTransient<OpenAIKey>(_ => new(key));
+    services.AddTransient<OpenAIGenerator>();
+}
+
+void ConfigureIdeogram(IServiceCollection services, string key)
+{
+    var httpClient = new HttpClient();
+    
+    services.AddTransient<IdeogramApi>(_ => new(key, httpClient, new ("https://api.ideogram.ai")));
+}
 
 void ConfigureDiscord(HostApplicationBuilder builder, string botToken)
 {

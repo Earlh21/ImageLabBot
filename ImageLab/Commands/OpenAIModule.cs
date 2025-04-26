@@ -1,5 +1,9 @@
-﻿using ImageLab.Services;
+﻿using System.Text;
+using ImageLab.Services;
 using ImageLab.Services.OpenAI;
+using ImageLab.Util;
+using Microsoft.Extensions.Logging;
+using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 using SixLabors.ImageSharp.Formats;
@@ -10,15 +14,16 @@ using SixLabors.ImageSharp.Formats.Webp;
 namespace ImageLab.Commands;
 
 [SlashCommand("openai", "OpenAI commands")]
-public class OpenAIModule(OpenAIGenerator openAIGenerator) : ApplicationCommandModule<ApplicationCommandContext>
+public class OpenAIModule(OpenAIGenerator openai, HttpClient httpClient, ILogger<OpenAIModule> logger) : ApplicationCommandModule<ApplicationCommandContext>
 {
+    [SubSlashCommand("create", "Create new images")]
     public async Task CreateCommand
     (
         string prompt,
         OpenAITransparency? transparency = null,
         int? numberOfImages = null,
         int? outputCompression = null,
-        OpenAIOutputFormat outputFormat = OpenAIOutputFormat.Webp,
+        OpenAIOutputFormat? outputFormat = null,
         OpenAIQuality? quality = null,
         OpenAISize? size = null,
         OpenAIStyle? style = null,
@@ -27,22 +32,28 @@ public class OpenAIModule(OpenAIGenerator openAIGenerator) : ApplicationCommandM
     {
         await RespondAsync(InteractionCallback.DeferredMessage());
 
+        var memoryStreams = new List<MemoryStream>();
+
         try
         {
-            var images = await openAIGenerator.GenerateImageAsync
+            outputFormat ??= model switch
+            {
+                OpenAIModel.GPTImage1 => OpenAIOutputFormat.Webp,
+                _ => OpenAIOutputFormat.Png
+            };
+
+            var base64Images = await openai.GenerateBase64ImagesAsync
             (
                 model,
                 prompt,
+                outputFormat.Value,
                 transparency,
                 numberOfImages,
                 outputCompression,
-                outputFormat,
                 quality,
                 size,
                 style
             );
-
-            var message = new InteractionMessageProperties();
 
             var extension = outputFormat switch
             {
@@ -50,30 +61,81 @@ public class OpenAIModule(OpenAIGenerator openAIGenerator) : ApplicationCommandM
                 OpenAIOutputFormat.Jpeg => "jpg",
                 OpenAIOutputFormat.Webp => "webp",
             };
-            
-            IImageEncoder encoder = outputFormat switch
-            {
-                OpenAIOutputFormat.Png => new PngEncoder(),
-                OpenAIOutputFormat.Jpeg => new JpegEncoder(),
-                OpenAIOutputFormat.Webp => new WebpEncoder()
-            };
 
-            message.Attachments = images
-                .Select((image, i) =>
-                {
-                    var memoryStream = new MemoryStream();
-                    image.Save(memoryStream, encoder);
-
-                    return new AttachmentProperties($"{i}.{extension}", memoryStream);
-                }).ToArray();
-            
+            var message = MessageUtil.Base64ImagesToMessage(memoryStreams, base64Images, extension);
             await FollowupAsync(message);
         }
         catch (ArgumentException ex)
         {
+            await FollowupAsync(ex.Message);
         }
-        catch (ServiceException ex)
+        catch (Exception ex)
         {
+            logger.Log(LogLevel.Error, ex, "Internal error generating OpenAI image");
+            await FollowupAsync("Failed to generate image. Tell admin to check logs");
+        }
+        finally
+        {
+            foreach (var stream in memoryStreams)
+            {
+                await stream.DisposeAsync();
+            }
+        }
+    }
+
+    [SubSlashCommand("edit", "Edit images")]
+    public async Task EditCommand(
+        string prompt,
+        Attachment imageAttachment,
+        Attachment? imageAttachment2 = null,
+        Attachment? imageAttachment3 = null,
+        Attachment? imageAttachment4 = null,
+        OpenAIModel model = OpenAIModel.GPTImage1,
+        int? n = null,
+        OpenAIQuality? quality = null,
+        OpenAISize? size = null)
+    {
+        await RespondAsync(InteractionCallback.DeferredMessage());
+
+        var memoryStreams = new List<MemoryStream>();
+        
+        var attachments = new [] {imageAttachment, imageAttachment2, imageAttachment3, imageAttachment4}
+            .Where(att => att != null)
+            .Select(att => att!)
+            .ToArray();
+
+        var base64Attachments = await MessageUtil.AttachmentsToBase64Async(httpClient, attachments);
+        
+        var base64Images = await openai.EditBase64ImageAsync
+        (
+            model,
+            prompt,
+            base64Attachments,
+            quality,
+            size,
+            n
+        );
+
+        try
+        {
+            var message = MessageUtil.Base64ImagesToMessage(memoryStreams, base64Images, "png");
+            await FollowupAsync(message);
+        }
+        catch (ArgumentException ex)
+        {
+            await FollowupAsync(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            logger.Log(LogLevel.Error, ex, "Internal error generating OpenAI image");
+            await FollowupAsync("Failed to generate image. Tell admin to check logs");
+        }
+        finally
+        {
+            foreach (var stream in memoryStreams)
+            {
+                await stream.DisposeAsync();
+            }
         }
     }
 }

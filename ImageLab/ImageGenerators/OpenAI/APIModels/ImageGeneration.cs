@@ -39,8 +39,15 @@ public class ImageGenerationData
     {
         if (B64Json != null)
         {
-            var bytes = Convert.FromBase64String(B64Json);
-            return Image.Load(bytes);
+            try
+            {
+                var bytes = Convert.FromBase64String(B64Json);
+                return Image.Load(bytes);
+            }
+            catch (Exception e)
+            {
+                int d = 3;
+            }
         }
         
         return null;
