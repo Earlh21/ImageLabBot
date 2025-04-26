@@ -66,6 +66,8 @@ public class GPTImage1Model : OpenAIImageModel
                 OpenAIQuality.Low => "low",
                 _ => null
             },
+            
+            ResponseFormat = null,
 
             Size = size switch
             {
@@ -109,6 +111,8 @@ public class GPTImage1Model : OpenAIImageModel
                 OpenAIQuality.Low => "low",
                 _ => null
             },
+            
+            ResponseFormat = null,
             
             N = n,
 
