@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
+using Recraft;
 
 #if DEBUG
 var botToken = GetEnvironmentVariable("IMAGELAB_BOT_TOKEN_DEBUG");
@@ -40,13 +41,22 @@ if (string.IsNullOrEmpty(ideogramKey))
     throw new ConfigurationException("IMAGELAB_IDEOGRAM_KEY environment variable is not set");
 }
 
+var recraftKey = GetEnvironmentVariable("IMAGELAB_RECRAFT_KEY");
+
+if (string.IsNullOrEmpty(recraftKey))
+{
+    throw new ConfigurationException("IMAGELAB_RECRAFT_KEY environment variable is not set");
+}
+
 var builder = Host.CreateApplicationBuilder();
 //ConfigureDatabase(builder.Services);
 ConfigureDiscord(builder, botToken);
-ConfigureOpenAI(builder.Services, openaiKey);
-ConfigureIdeogram(builder.Services, ideogramKey);
 ConfigureLogging(builder.Services);
 ConfigureHttpClient(builder.Services);
+
+ConfigureOpenAI(builder.Services, openaiKey);
+ConfigureIdeogram(builder.Services, ideogramKey);
+ConfigureRecraft(builder.Services, recraftKey);
 
 var host = builder.Build();
 
@@ -77,6 +87,13 @@ void ConfigureIdeogram(IServiceCollection services, string key)
     var httpClient = new HttpClient();
     
     services.AddTransient<IdeogramApi>(_ => new(key, httpClient, new ("https://api.ideogram.ai")));
+}
+
+void ConfigureRecraft(IServiceCollection services, string key)
+{
+    var httpClient = new HttpClient();
+
+    services.AddTransient<RecraftClient>(_ => new(key, httpClient, new("https://external.api.recraft.ai")));
 }
 
 void ConfigureDiscord(HostApplicationBuilder builder, string botToken)
