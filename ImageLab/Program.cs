@@ -10,7 +10,7 @@ using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services;
 using NetCord.Hosting.Services.ApplicationCommands;
 
-/**#if DEBUG
+#if DEBUG
 var botToken = GetEnvironmentVariable("IMAGELAB_BOT_TOKEN_DEBUG");
 
 if (string.IsNullOrEmpty(botToken))
@@ -24,7 +24,7 @@ if (string.IsNullOrEmpty(botToken))
 {
     throw new ConfigurationException("IMAGELAB_BOT_TOKEN environment variable is not set");
 }
-#endif**/
+#endif
 
 var openaiKey = GetEnvironmentVariable("IMAGELAB_OPENAI_KEY");
 
