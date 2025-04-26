@@ -67,8 +67,6 @@ public class GPTImage1Model : OpenAIImageModel
                 _ => null
             },
 
-            ResponseFormat = "b64_json",
-
             Size = size switch
             {
                 OpenAISize.Square => "1024x1024",
@@ -112,7 +110,6 @@ public class GPTImage1Model : OpenAIImageModel
                 _ => null
             },
             
-            ResponseFormat = "b64_json",
             N = n,
 
             Size = size switch
