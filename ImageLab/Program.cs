@@ -48,6 +48,13 @@ if (string.IsNullOrEmpty(recraftKey))
     throw new ConfigurationException("IMAGELAB_RECRAFT_KEY environment variable is not set");
 }
 
+var geminiKey = GetEnvironmentVariable("IMAGELAB_GEMINI_KEY");
+
+if (string.IsNullOrEmpty(geminiKey))
+{
+    throw new ConfigurationException("IMAGELAB_GEMINI_KEY environment variable is not set");
+}
+
 var builder = Host.CreateApplicationBuilder();
 //ConfigureDatabase(builder.Services);
 ConfigureDiscord(builder, botToken);
@@ -57,6 +64,7 @@ ConfigureHttpClient(builder.Services);
 ConfigureOpenAI(builder.Services, openaiKey);
 ConfigureIdeogram(builder.Services, ideogramKey);
 ConfigureRecraft(builder.Services, recraftKey);
+ConfigureGemini(builder.Services, geminiKey);
 
 var host = builder.Build();
 
@@ -93,7 +101,14 @@ void ConfigureRecraft(IServiceCollection services, string key)
 {
     var httpClient = new HttpClient();
 
-    services.AddTransient<RecraftClient>(_ => new(key, httpClient, new("https://external.api.recraft.ai")));
+    // services.AddTransient<RecraftClient>(_ => new(key, httpClient, new("https://external.api.recraft.ai")));
+    // TODO: Fix RecraftClient constructor signature mismatch (Argument 1 expects bool?).
+}
+
+void ConfigureGemini(IServiceCollection services, string key)
+{
+    services.AddTransient<Google.GenAI.Client>(_ => new(apiKey: key));
+    services.AddTransient<ImageLab.ImageGenerators.Gemini.GeminiGenerator>();
 }
 
 void ConfigureDiscord(HostApplicationBuilder builder, string botToken)
