@@ -12,8 +12,8 @@ public class GeminiGenerator(Client client, ILogger<GeminiGenerator> logger)
     {
         return model switch
         {
-            GeminiModel.Gemini3 => "gemini-3-pro-image-preview",
-            _ => "gemini-3-pro-image-preview"
+            GeminiModel.NanoBanana21 => "gemini-nano-banana-2.1",
+            _ => "gemini-nano-banana-2.1"
         };
     }
 

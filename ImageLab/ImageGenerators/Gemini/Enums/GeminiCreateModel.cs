@@ -4,6 +4,6 @@ namespace ImageLab.ImageGenerators.Gemini.Enums;
 
 public enum GeminiModel
 {
-    [SlashCommandChoice("Gemini 3 Pro Image Preview")]
-    Gemini3,
+    [SlashCommandChoice("Nano Banana 2.1")]
+    NanoBanana21,
 }

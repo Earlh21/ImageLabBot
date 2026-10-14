@@ -15,7 +15,7 @@ public class GeminiModule(GeminiGenerator gemini, HttpClient httpClient, ILogger
     public async Task CreateCommand(
         string prompt,
         int? numberOfImages = 1,
-        GeminiModel model = GeminiModel.Gemini3
+        GeminiModel model = GeminiModel.NanoBanana21
     )
     {
         await RespondAsync(InteractionCallback.DeferredMessage());
@@ -41,16 +41,11 @@ public class GeminiModule(GeminiGenerator gemini, HttpClient httpClient, ILogger
     public async Task EditCommand(
         string prompt,
         Attachment image,
-        GeminiModel model = GeminiModel.Gemini3,
+        GeminiModel model = GeminiModel.NanoBanana21,
         int? numberOfImages = 1
     )
     {
         await RespondAsync(InteractionCallback.DeferredMessage());
-        
-        if (model != GeminiModel.Gemini3)
-        {
-            await FollowupAsync("Only Gemini 3 supports image editing.");
-        }
         
         var memoryStreams = new List<MemoryStream>();
         
