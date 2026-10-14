@@ -31,21 +31,21 @@ var openaiKey = GetEnvironmentVariable("IMAGELAB_OPENAI_KEY");
 
 if (string.IsNullOrEmpty(openaiKey))
 {
-    throw new ConfigurationException("IMAGELAB_OPENAI_KEY environment variable is not set");
+    //throw new ConfigurationException("IMAGELAB_OPENAI_KEY environment variable is not set");
 }
 
 var ideogramKey = GetEnvironmentVariable("IMAGELAB_IDEOGRAM_KEY");
 
 if (string.IsNullOrEmpty(ideogramKey))
 {
-    throw new ConfigurationException("IMAGELAB_IDEOGRAM_KEY environment variable is not set");
+    //throw new ConfigurationException("IMAGELAB_IDEOGRAM_KEY environment variable is not set");
 }
 
 var recraftKey = GetEnvironmentVariable("IMAGELAB_RECRAFT_KEY");
 
 if (string.IsNullOrEmpty(recraftKey))
 {
-    throw new ConfigurationException("IMAGELAB_RECRAFT_KEY environment variable is not set");
+    //throw new ConfigurationException("IMAGELAB_RECRAFT_KEY environment variable is not set");
 }
 
 var geminiKey = GetEnvironmentVariable("IMAGELAB_GEMINI_KEY");
@@ -61,9 +61,9 @@ ConfigureDiscord(builder, botToken);
 ConfigureLogging(builder.Services);
 ConfigureHttpClient(builder.Services);
 
-ConfigureOpenAI(builder.Services, openaiKey);
-ConfigureIdeogram(builder.Services, ideogramKey);
-ConfigureRecraft(builder.Services, recraftKey);
+//ConfigureOpenAI(builder.Services, openaiKey);
+//ConfigureIdeogram(builder.Services, ideogramKey);
+//ConfigureRecraft(builder.Services, recraftKey);
 ConfigureGemini(builder.Services, geminiKey);
 
 var host = builder.Build();
